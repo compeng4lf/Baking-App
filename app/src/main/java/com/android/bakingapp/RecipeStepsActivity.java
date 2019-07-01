@@ -28,6 +28,7 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
 
     @BindView(R.id.rv_RecipeSteps) RecyclerView recyclerView;
     @BindView(R.id.tv_Ingredients) TextView mTextIngredients;
+    @BindView(R.id.tv_Servings) TextView mServings;
     private List<com.android.bakingapp.Step> mSteps;
     private com.android.bakingapp.Step mTwoPaneStep;
     private List<com.android.bakingapp.Ingredient> mIngredients;
@@ -48,6 +49,8 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
         setContentView(R.layout.activity_recipe_steps);
         ButterKnife.bind(this);
 
+        mTextIngredients.setVisibility(View.GONE);
+
         if (savedInstanceState != null){
 
         }
@@ -61,10 +64,13 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
         if (intent.hasExtra("RecipeSteps")) {
             mRecipes = (com.android.bakingapp.Recipes) intent.getParcelableExtra("RecipeSteps");
             mSteps = mRecipes.getSteps();
+
             recyclerView.setHasFixedSize(true);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             mAdapter = new RecipeStepsAdapter(mSteps, getApplicationContext(), this);
             recyclerView.setAdapter(mAdapter);
+
+            mServings.setText("Makes " + mRecipes.getServings() + " servings");
 
             mIngredients = mRecipes.getIngredients();
 
@@ -73,7 +79,6 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
                 mIngred = mIngredients.get(i).getIngredient();
                 mQuantity = mIngredients.get(i).getQuantity();
                 mMeasure = mIngredients.get(i).getMeasure();
-
                 mTextIngredients.append(mQuantity + " " + mMeasure + ": " + mIngred + "\n");
 
             }
@@ -153,12 +158,15 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
 
     private void UpdateBakingWidgets(ArrayList<com.android.bakingapp.Ingredient> fromActivityIngredientsList){
 
-        Intent intent =  new Intent("android.appwidget.action.APPWIDGET_INGREDIENTS");
-        intent.setAction("android.appwidget.action.APPWIDGET_INGREDIENTS");
+        Intent intent =  new Intent("android.appwidget.action.APPWIDGET_UPDATE");
+        intent.setAction("android.appwidget.action.APPWIDGET_UPDATE");
         intent.putExtra("FROM_ACTIVITY_INGREDIENTS_LIST", fromActivityIngredientsList);
         sendBroadcast(intent);
 
     }
 
 
+    public void ToggleContents(View view) {
+        mTextIngredients.setVisibility(mTextIngredients.isShown() ? View.GONE : View.VISIBLE);
+    }
 }

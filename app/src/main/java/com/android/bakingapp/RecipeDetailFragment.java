@@ -10,18 +10,25 @@ import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 
+import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
@@ -43,10 +50,9 @@ public class RecipeDetailFragment extends Fragment {
     private SimpleExoPlayer mExoPlayer;
     private Uri progressiveUri;
     private long playbackPosition = 0;
-    private boolean playWhenReady =  true;
     private View rootview;
-    private boolean mIsLandscape = false;
-    private CardView cardView;
+
+
 
 
     public RecipeDetailFragment() {
@@ -74,48 +80,51 @@ public class RecipeDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         if (savedInstanceState != null){
-
+             mStepDetail.setVideoURL(savedInstanceState.get("VIDEO_URL").toString());
              playbackPosition = savedInstanceState.getLong("PLAY_BACK_POSITION");
              mStepDetail = savedInstanceState.getParcelable("STEP");
 
+
+
+
         }
-             rootview = inflater.inflate(R.layout.fragment_recipe_detail, container, false);
 
-            mTextDetailsRecipeSteps = (TextView) rootview.findViewById(R.id.tv_DetailRecipeSteps);
-            mPlayerView = (SimpleExoPlayerView) rootview.findViewById(R.id.view_exoplayer);
+        rootview = inflater.inflate(R.layout.fragment_recipe_detail, container, false);
+
+        mTextDetailsRecipeSteps = (TextView) rootview.findViewById(R.id.tv_DetailRecipeSteps);
+        mPlayerView = (SimpleExoPlayerView) rootview.findViewById(R.id.view_exoplayer);
+
+        mTextDetailsRecipeSteps.setText(mStepDetail.getDescription());
+
+        if (mStepDetail.getVideoURL() != null) {
+            progressiveUri = Uri.parse(mStepDetail.getVideoURL());
+            initializePlayer(progressiveUri);
+        }
+
+        if (mStepDetail.getVideoURL() == null || mStepDetail.getVideoURL().isEmpty()) {
+            mPlayerView.setVisibility(View.GONE);
             mTextDetailsRecipeSteps.setVisibility(View.VISIBLE);
-            mTextDetailsRecipeSteps.setText(mStepDetail.getDescription());
+            Toast.makeText(getContext(), "There is no video associated with this step.", Toast.LENGTH_SHORT).show();
+        }
 
-            if (mStepDetail.getVideoURL() != null) {
-                progressiveUri = Uri.parse(mStepDetail.getVideoURL());
-                initializePlayer(progressiveUri);
+        if (isHandsetAndLandscape() && mStepDetail.getVideoURL()!=null){
+            mTextDetailsRecipeSteps.setVisibility(View.GONE);
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mPlayerView.getLayoutParams();
+            params.width = params.MATCH_PARENT;
+            params.height = params.MATCH_PARENT;
+            mPlayerView.setLayoutParams(params);
 
-            }
-
-            if (mStepDetail.getVideoURL() == null || mStepDetail.getVideoURL().isEmpty()) {
-                mPlayerView.setVisibility(View.GONE);
-                Toast.makeText(getContext(), "There is no video associated with this step.", Toast.LENGTH_SHORT).show();
-
-            }
-
-            if (isHandsetAndLandscape()){
-                mTextDetailsRecipeSteps.setVisibility(View.GONE);
-                mPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
-                cardView = (CardView) rootview.findViewById(R.id.cardview_detail);
-                cardView.setVisibility(View.GONE);
-            }
+        }
 
 
-
-        // Inflate the layout for this fragment
-        return rootview;
-    }
+    // Inflate the layout for this fragment
+    return rootview;
+}
 
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
 
     }
 
@@ -131,19 +140,15 @@ public class RecipeDetailFragment extends Fragment {
         LoadControl loadControl = new DefaultLoadControl();
         mExoPlayer = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector, loadControl);
         mPlayerView.setPlayer(mExoPlayer);
-
-        // Set the ExoPlayer.EventListener to this activity.
-        //mExoPlayer.addListener(getActivity());
-
         // Prepare the MediaSource.
         String userAgent = Util.getUserAgent(getContext(), "BakingApp");
-        MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
-                getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
+        MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
         mExoPlayer.seekTo(playbackPosition);
         mExoPlayer.prepare(mediaSource);
         mExoPlayer.setPlayWhenReady(false);
 
     }
+
 
     @Override
     public void onDestroy() {
@@ -185,6 +190,9 @@ public class RecipeDetailFragment extends Fragment {
         super.onResume();
         if (progressiveUri != null)
             initializePlayer(progressiveUri);
+        if(isHandsetAndLandscape()) {
+            mExoPlayer.setPlayWhenReady(true);
+        }
     }
 
     @Override
@@ -194,21 +202,14 @@ public class RecipeDetailFragment extends Fragment {
         super.onSaveInstanceState(outState);
 
         outState.putLong("PLAY_BACK_POSITION", playbackPosition);
-        if (progressiveUri != null){
-            outState.putString("VIDEO_URL", progressiveUri.toString());
-        }
-
         outState.putParcelable("STEP", mStepDetail);
+        outState.putString("VIDEO_URL", progressiveUri.toString());
 
     }
 
     private boolean isHandsetAndLandscape() {
-
         return getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE
                 && getResources().getConfiguration().screenWidthDp <= 900;
     }
-
-
-
 
 }

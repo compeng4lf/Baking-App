@@ -8,25 +8,31 @@
     <application
         android:allowBackup="true"
         android:appComponentFactory="whateverString"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/cookbook"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/cookbook"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:replace="android:appComponentFactory">
+
         <receiver android:name=".BakingWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="android.appwidget.action.APPWIDGET_INGREDIENTS"/>
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/baking_widget_info" />
         </receiver>
+        <activity android:name=".RecipeDetailActivity"/>
+        <activity android:name=".RecipeStepsActivity"
+            android:parentActivityName=".MainActivity" >
 
-        <activity android:name=".RecipeDetailActivity" />
-        <activity android:name=".RecipeStepsActivity" />
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

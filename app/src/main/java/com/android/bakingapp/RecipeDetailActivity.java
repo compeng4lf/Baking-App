@@ -1,15 +1,22 @@
 package com.android.bakingapp;
 
+import android.app.Activity;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,38 +32,54 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static android.view.MotionEvent.ACTION_DOWN;
+import static javax.xml.datatype.DatatypeConstants.DURATION;
+
 public class RecipeDetailActivity extends AppCompatActivity  {
 
     private com.android.bakingapp.Step mStepDetails;
+    private BakingWidget mBakingReciever = null;
     @BindView(R.id.btn_Prev) Button mBtnPrevious;
     @BindView(R.id.btn_Next) Button mBtnNext;
+
+
+
+
     private int mRecipeStepNum;
     private List<com.android.bakingapp.Step> mAllStepDetails;
     private ArrayList<com.android.bakingapp.Ingredient> mAllIngredients;
     private String tempUri = null;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkOrientation();
-        if (isHandsetAndLandscape()){
-            hideSystemUI();
-        }
         setContentView(R.layout.activity_recipe_detail);
         ButterKnife.bind(this);
 
-        // Show the Up button in the action bar.
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("android.appwidget.action.APPWIDGET_UPDATE");
+        intentFilter.setPriority(100);
+
+        mBakingReciever = new BakingWidget();
+
+
+
+        registerReceiver(mBakingReciever, intentFilter);
+
+
+
 
         if (savedInstanceState != null){
 
-            mAllStepDetails = savedInstanceState.getParcelableArrayList("STEP");
+            mAllStepDetails = savedInstanceState.getParcelableArrayList("ALLSTEPS");
+            mRecipeStepNum = savedInstanceState.getInt("CURRENT_STEP");
 
+        }
+
+        if (isHandsetAndLandscape()){
+            hideSystemUI();
         }
 
         if (savedInstanceState==null){
@@ -81,14 +104,14 @@ public class RecipeDetailActivity extends AppCompatActivity  {
                     tempUri = mStepDetails.getVideoURL();
                 }
 
-                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
+                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 RecipeDetailFragment mRecipeDetailFragment = new RecipeDetailFragment();
 
                 mRecipeDetailFragment.setRecipeDescription(tempDesc);
                 mRecipeDetailFragment.setRecipeUri(tempUri);
 
-                fragmentTransaction.add(R.id.frag_RecipeDetails, mRecipeDetailFragment).commit();
+                fragmentTransaction.replace(R.id.frag_RecipeDetails, mRecipeDetailFragment).commit();
 
                 UpdateBakingWidgets(mAllIngredients);
 
@@ -116,6 +139,15 @@ public class RecipeDetailActivity extends AppCompatActivity  {
     }
 
 
+    @Override
+    public void onDestroy() {
+
+        super.onDestroy();
+        //unregister broadcast  receiver
+        if (this.mBakingReciever != null){
+            unregisterReceiver(mBakingReciever);
+        }
+    }
 
     public void UpdateUINext(){
 
@@ -189,20 +221,16 @@ public class RecipeDetailActivity extends AppCompatActivity  {
 
 
     private void UpdateBakingWidgets(ArrayList<com.android.bakingapp.Ingredient> fromActivityIngredientsList){
+        int[] ids = AppWidgetManager.getInstance(getApplication()).getAppWidgetIds(new ComponentName(getApplication(), BakingWidget.class));
 
-        Intent intent =  new Intent("android.appwidget.action.APPWIDGET_INGREDIENTS");
-        intent.setAction("android.appwidget.action.APPWIDGET_INGREDIENTS");
+        Intent intent =  new Intent("android.appwidget.action.APPWIDGET_UPDATE");
+        //intent.setAction("android.appwidget.action.APPWIDGET_UPDATE");
         intent.putExtra("FROM_ACTIVITY_INGREDIENTS_LIST", fromActivityIngredientsList);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
         sendBroadcast(intent);
 
     }
 
-
-    public void checkOrientation(){
-
-        int orientation = getResources().getConfiguration().orientation;
-
-    }
 
     private boolean isHandsetAndLandscape() {
 
@@ -210,11 +238,13 @@ public class RecipeDetailActivity extends AppCompatActivity  {
                 && getResources().getConfiguration().screenWidthDp <= 900;
     }
 
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
 
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("STEP", (ArrayList<? extends Parcelable>) mAllStepDetails);
+        outState.putParcelableArrayList("ALLSTEPS", (ArrayList<? extends Parcelable>) mAllStepDetails);
+        outState.putInt("CURRENT_STEP", mRecipeStepNum);
 
     }
 
@@ -246,4 +276,6 @@ public class RecipeDetailActivity extends AppCompatActivity  {
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
+
+
 }

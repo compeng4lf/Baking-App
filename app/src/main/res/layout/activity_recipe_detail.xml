@@ -12,7 +12,6 @@
         android:id="@+id/frag_RecipeDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
         tools:layout="@layout/fragment_recipe_detail">
 
     </FrameLayout>
@@ -25,7 +24,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="10dp">
 
         <Button
             android:id="@+id/btn_Prev"
@@ -42,6 +42,7 @@
             android:layout_weight="1"
             android:padding="10dp"
             android:text="@string/next" />
+
     </LinearLayout>
 
 </LinearLayout>

@@ -5,9 +5,10 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="ingredient_list">Ingredient List</string>
+    <string name="ingredient_list"> + Ingredient List</string>
     <string name="next">NEXT</string>
     <string name="previous">PREVIOUS</string>
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
+    <string name="EmptyWidget">There is no recipe yet</string>
 </resources>

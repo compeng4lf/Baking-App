@@ -49,8 +49,11 @@ public class RecipeStepsAdapter extends RecyclerView.Adapter<RecipeStepsAdapter.
 
 
         Step r = Steps.get(position);
+        int Step = Integer.parseInt(r.getId());
+        Step = Step +1;
+        
 
-        viewHolder.mRecipeSteps.setText(r.getId() + ":  " + r.getShortDescription());
+        viewHolder.mRecipeSteps.setText("Step " + Step + ":  " + r.getShortDescription());
 
     }
 

@@ -14,7 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:replace="android:appComponentFactory">
-
         <receiver android:name=".BakingWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -24,9 +23,11 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/baking_widget_info" />
         </receiver>
-        <activity android:name=".RecipeDetailActivity"/>
-        <activity android:name=".RecipeStepsActivity"
-            android:parentActivityName=".MainActivity" >
+
+        <activity android:name=".RecipeDetailActivity" />
+        <activity
+            android:name=".RecipeStepsActivity"
+            android:parentActivityName=".MainActivity">
 
             <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data
@@ -40,7 +41,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".BakingWidgetRemoteViewsService" android:permission="android.permission.BIND_REMOTEVIEWS"/>
+
+        <service
+            android:name=".BakingWidgetRemoteViewsService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
     </application>
 
 </manifest>

@@ -11,4 +11,5 @@
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
     <string name="EmptyWidget">There is no recipe yet</string>
+    <string name="configure">Configure</string>
 </resources>

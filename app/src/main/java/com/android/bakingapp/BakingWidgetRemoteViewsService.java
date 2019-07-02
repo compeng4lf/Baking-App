@@ -8,6 +8,7 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class BakingWidgetRemoteViewsService extends RemoteViewsService {
     @Override
@@ -18,7 +19,7 @@ public class BakingWidgetRemoteViewsService extends RemoteViewsService {
     class ListViewRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
         private Context mContext;
-        private ArrayList<com.android.bakingapp.Ingredient> mIngredientList = new ArrayList<>();
+        private List<com.android.bakingapp.Ingredient> mIngredientList = new ArrayList<>();
         private com.android.bakingapp.Ingredient mIngredient;
         private Intent intent;
         private int appWidgetId;
@@ -48,7 +49,7 @@ public class BakingWidgetRemoteViewsService extends RemoteViewsService {
         @Override
         public int getCount() {
 
-            if (mIngredientList.isEmpty()){
+            if (mIngredientList.isEmpty() || mIngredientList == null){
                 return 0;
             }
 

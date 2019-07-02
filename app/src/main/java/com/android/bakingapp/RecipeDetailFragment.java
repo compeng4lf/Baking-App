@@ -84,9 +84,6 @@ public class RecipeDetailFragment extends Fragment {
              playbackPosition = savedInstanceState.getLong("PLAY_BACK_POSITION");
              mStepDetail = savedInstanceState.getParcelable("STEP");
 
-
-
-
         }
 
         rootview = inflater.inflate(R.layout.fragment_recipe_detail, container, false);
@@ -174,6 +171,10 @@ public class RecipeDetailFragment extends Fragment {
         mStepDetail.setVideoURL(recipeUri);
     }
 
+    public void setStepNumber (String stepNumber){
+        mStepDetail.setId(stepNumber);
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -203,8 +204,11 @@ public class RecipeDetailFragment extends Fragment {
 
         outState.putLong("PLAY_BACK_POSITION", playbackPosition);
         outState.putParcelable("STEP", mStepDetail);
-        outState.putString("VIDEO_URL", progressiveUri.toString());
-
+        if (progressiveUri != null) {
+            outState.putString("VIDEO_URL", progressiveUri.toString());
+        }else{
+            outState.putString("VIDEO_URL", null);
+        }
     }
 
     private boolean isHandsetAndLandscape() {

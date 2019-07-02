@@ -3,6 +3,7 @@ package com.android.bakingapp;
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -49,6 +50,7 @@ public class RecipeDetailActivity extends AppCompatActivity  {
     private List<com.android.bakingapp.Step> mAllStepDetails;
     private ArrayList<com.android.bakingapp.Ingredient> mAllIngredients;
     private String tempUri = null;
+    private String mRecipeName = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,17 +59,12 @@ public class RecipeDetailActivity extends AppCompatActivity  {
         ButterKnife.bind(this);
 
 
-
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("android.appwidget.action.APPWIDGET_UPDATE");
         intentFilter.setPriority(100);
 
         mBakingReciever = new BakingWidget();
-
-
-
         registerReceiver(mBakingReciever, intentFilter);
-
 
 
 
@@ -75,6 +72,7 @@ public class RecipeDetailActivity extends AppCompatActivity  {
 
             mAllStepDetails = savedInstanceState.getParcelableArrayList("ALLSTEPS");
             mRecipeStepNum = savedInstanceState.getInt("CURRENT_STEP");
+            mRecipeName = savedInstanceState.getString("RECIPENAME");
 
         }
 
@@ -95,6 +93,10 @@ public class RecipeDetailActivity extends AppCompatActivity  {
 
                 if (intent.hasExtra("AllIngredients")){
                     mAllIngredients = intent.getParcelableArrayListExtra("AllIngredients");
+                }
+
+                if (intent.hasExtra("RECIPENAME")){
+                    mRecipeName = intent.getStringExtra("RECIPENAME");
                 }
 
                 String tempDesc = mStepDetails.getDescription();
@@ -144,9 +146,12 @@ public class RecipeDetailActivity extends AppCompatActivity  {
 
         super.onDestroy();
         //unregister broadcast  receiver
+
         if (this.mBakingReciever != null){
             unregisterReceiver(mBakingReciever);
         }
+
+
     }
 
     public void UpdateUINext(){
@@ -227,6 +232,7 @@ public class RecipeDetailActivity extends AppCompatActivity  {
         //intent.setAction("android.appwidget.action.APPWIDGET_UPDATE");
         intent.putExtra("FROM_ACTIVITY_INGREDIENTS_LIST", fromActivityIngredientsList);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        intent.putExtra("RECIPENAME", mRecipeName);
         sendBroadcast(intent);
 
     }
@@ -245,6 +251,7 @@ public class RecipeDetailActivity extends AppCompatActivity  {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList("ALLSTEPS", (ArrayList<? extends Parcelable>) mAllStepDetails);
         outState.putInt("CURRENT_STEP", mRecipeStepNum);
+        outState.putString("RECIPENAME", mRecipeName);
 
     }
 

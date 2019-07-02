@@ -1,5 +1,7 @@
 package com.android.bakingapp;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcelable;
@@ -38,6 +40,8 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
     private String mQuantity;
     private String mMeasure;
     private String tempDesc;
+    private String mRecipeName;
+    private int mRecipeStepNum;
 
     private boolean mTwoPane;
 
@@ -53,6 +57,10 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
 
         if (savedInstanceState != null){
 
+            mSteps = savedInstanceState.getParcelableArrayList("ALLSTEPS");
+            mRecipeStepNum = savedInstanceState.getInt("CURRENT_STEP");
+            mRecipeName = savedInstanceState.getString("RECIPENAME");
+
         }
 
         ActionBar actionBar = getSupportActionBar();
@@ -64,6 +72,8 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
         if (intent.hasExtra("RecipeSteps")) {
             mRecipes = (com.android.bakingapp.Recipes) intent.getParcelableExtra("RecipeSteps");
             mSteps = mRecipes.getSteps();
+            mRecipeName = mRecipes.getName();
+
 
             recyclerView.setHasFixedSize(true);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -99,18 +109,13 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
                 tempDesc = "Please choose a step to view details";
 
             }else {
-
-
-
                 tempDesc = mTwoPaneStep.getDescription();
                 mRecipeDetailFragment.setRecipeUri(mTwoPaneStep.getVideoURL());
             }
 
             mRecipeDetailFragment.setRecipeDescription(tempDesc);
 
-
             FragmentManager fragmentManager = getSupportFragmentManager();
-
             fragmentManager.beginTransaction()
                     .replace(R.id.frag_twopane, mRecipeDetailFragment)
                     .commit();
@@ -127,6 +132,7 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
     public void onListItemClick(int clickedItemIndex) {
 
         com.android.bakingapp.Step intentDataHolder = mSteps.get(clickedItemIndex);
+        mRecipeStepNum = Integer.parseInt(intentDataHolder.getId());
 
         if (mTwoPane){
             UpdateTwoPane(intentDataHolder);
@@ -139,6 +145,7 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
             intent.putExtra("RecipeStepDetails", intentDataHolder);
             intent.putParcelableArrayListExtra("AllRecipeSteps", (ArrayList<? extends Parcelable>) mSteps);
             intent.putParcelableArrayListExtra("AllIngredients", (ArrayList<? extends Parcelable>) mIngredients);
+            intent.putExtra("RECIPENAME", mRecipeName);
             startActivity(intent);
         }
     }
@@ -148,7 +155,6 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
         RecipeDetailFragment mRecipeDetailFragment = new RecipeDetailFragment();
         mRecipeDetailFragment.setRecipeDescription(step.getDescription());
         mRecipeDetailFragment.setRecipeUri(step.getVideoURL());
-
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
         fragmentTransaction.replace(R.id.frag_twopane,mRecipeDetailFragment ).commit();
@@ -158,13 +164,26 @@ public class RecipeStepsActivity extends AppCompatActivity implements RecipeStep
 
     private void UpdateBakingWidgets(ArrayList<com.android.bakingapp.Ingredient> fromActivityIngredientsList){
 
+        int[] ids = AppWidgetManager.getInstance(getApplication()).getAppWidgetIds(new ComponentName(getApplication(), BakingWidget.class));
+
         Intent intent =  new Intent("android.appwidget.action.APPWIDGET_UPDATE");
         intent.setAction("android.appwidget.action.APPWIDGET_UPDATE");
         intent.putExtra("FROM_ACTIVITY_INGREDIENTS_LIST", fromActivityIngredientsList);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        intent.putExtra("RECIPENAME", mRecipeName);
         sendBroadcast(intent);
 
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList("ALLSTEPS", (ArrayList<? extends Parcelable>) mSteps);
+        outState.putInt("CURRENT_STEP", mRecipeStepNum);
+        outState.putString("RECIPENAME", mRecipeName);
+
+    }
 
     public void ToggleContents(View view) {
         mTextIngredients.setVisibility(mTextIngredients.isShown() ? View.GONE : View.VISIBLE);
